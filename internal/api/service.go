@@ -32,7 +32,12 @@ func (c *ServiceImpl) Login() (*string, error) {
 		return nil, err
 	}
 
-	return auth.AuthorizationToken, nil
+	fmtAuth, err := ecr.FormatAuthDetails(*auth.AuthorizationToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return fmtAuth, nil
 }
 
 func (s *ServiceImpl) Build(imageRefUrl string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
@@ -68,19 +73,14 @@ func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]stri
 		return err
 	}
 
-	fmtAuth, err := ecr.FormatAuthDetails(*auth)
-	if err != nil {
-		return err
-	}
-
-	return s.dockerService.Push(*repo.RepositoryUri, *fmtAuth)
+	return s.dockerService.Push(*repo.RepositoryUri, *auth)
 }
 
 func (c *ServiceImpl) Pull(imageRefUrl string) error {
-	authorisationToken, err := c.Login()
+	auth, err := c.Login()
 	if err != nil {
 		return err
 	}
 
-	return c.dockerService.Pull(imageRefUrl, *authorisationToken)
+	return c.dockerService.Pull(imageRefUrl, *auth)
 }
