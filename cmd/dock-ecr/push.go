@@ -11,7 +11,7 @@ var pushCmd = &cobra.Command{
 	Short: "Pushes a docker image tagged with a repository name to a cloud repository.",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := API.Push(repositoryName, repositoryTags); err != nil {
+		if err := API.Push(repositoryName, repositoryTags, imageTags...); err != nil {
 			fmt.Printf("error: %v", err)
 			return
 		}
@@ -23,6 +23,7 @@ var pushCmd = &cobra.Command{
 func init() {
 	pushCmd.PersistentFlags().StringVarP(&repositoryName, "repository-name", "r", "", "Repository of image")
 	pushCmd.PersistentFlags().StringToStringVarP(&repositoryTags, "repository-tags", "t", map[string]string{}, "Repository resource tags to be assigned")
+	pushCmd.PersistentFlags().StringArrayVarP(&imageTags, "image-tags", "i", []string{}, "docker tags to be assigned to image")
 
 	rootCmd.AddCommand(pushCmd)
 }

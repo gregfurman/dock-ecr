@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gregfurman/docker-ecr/internal/api"
-	"github.com/gregfurman/docker-ecr/internal/docker"
-	"github.com/gregfurman/docker-ecr/internal/ecr"
+	"github.com/gregfurman/docker-ecr/pkg/api"
+	"github.com/gregfurman/docker-ecr/pkg/docker"
+	"github.com/gregfurman/docker-ecr/pkg/ecr"
 	"github.com/spf13/cobra"
 )
 

@@ -3,8 +3,6 @@ package docker
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -27,9 +25,11 @@ func NewService(client *client.Client) Service {
 	return &ServiceImpl{client: client}
 }
 
+// Pull requests the docker host to pull an image from a remote repository.
+// The full remote image path is required as well as authentication for the registry.
 func (s *ServiceImpl) Pull(imageRefUrl, registryAuth string) error {
 	if !IsBase64(registryAuth) {
-		return fmt.Errorf("error: registry authorisation string in form 'username:password' is not base64 encoded")
+		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
 	}
 
 	reader, err := s.client.ImagePull(context.TODO(), imageRefUrl, types.ImagePullOptions{RegistryAuth: registryAuth})
@@ -38,13 +38,18 @@ func (s *ServiceImpl) Pull(imageRefUrl, registryAuth string) error {
 	}
 	defer reader.Close()
 
-	io.Copy(os.Stdout, reader)
+	if err := parse(reader); err != nil {
+		return fmt.Errorf("failed to pull image: %w", err)
+	}
+
 	return nil
 }
 
+// Push requests the docker host to push an image to a remote repository.
+// The full remote image path is required as well as authentication for the registry.
 func (s *ServiceImpl) Push(imageRefUrl, registryAuth string) error {
 	if !IsBase64(registryAuth) {
-		return fmt.Errorf("error: registry authorisation string in form 'username:password' is not base64 encoded")
+		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
 	}
 
 	reader, err := s.client.ImagePush(context.TODO(), imageRefUrl, types.ImagePushOptions{RegistryAuth: registryAuth})
@@ -53,7 +58,10 @@ func (s *ServiceImpl) Push(imageRefUrl, registryAuth string) error {
 	}
 	defer reader.Close()
 
-	parse(reader)
+	if err := parse(reader); err != nil {
+		return fmt.Errorf("failed to push image: %w", err)
+	}
+
 	return nil
 }
 
@@ -78,7 +86,10 @@ func (s *ServiceImpl) Build(dockerfile string, tags ...string) error {
 	}
 
 	defer res.Body.Close()
-	parse(res.Body)
+
+	if err := parse(res.Body); err != nil {
+		return fmt.Errorf("Failed to build image: %w", err)
+	}
 
 	return nil
 }

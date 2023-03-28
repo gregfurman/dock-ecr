@@ -10,7 +10,6 @@ import (
 	"regexp"
 
 	"github.com/docker/docker/api/types"
-	"github.com/sirupsen/logrus"
 )
 
 func CreateAuthConfig(username, password string) (string, error) {
@@ -64,12 +63,23 @@ func parse(rd io.Reader) error {
 		ErrorDetail ErrorDetail `json:"errorDetail"`
 	}
 
-	var lastLine string
+	type Line struct {
+		Status string `json:"status"`
+	}
+
+	var lastLine, lastStatus string
+
+	line := &Line{}
 
 	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
+
 		lastLine = scanner.Text()
-		logrus.Info(scanner.Text())
+		json.Unmarshal([]byte(lastLine), line)
+		if lastStatus != line.Status {
+			lastStatus = line.Status
+			println(lastStatus)
+		}
 	}
 
 	errLine := &ErrorLine{}
