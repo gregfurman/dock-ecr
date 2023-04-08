@@ -1,13 +1,9 @@
 package docker
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/archive"
 )
 
 type Service interface {
@@ -18,10 +14,10 @@ type Service interface {
 }
 
 type ServiceImpl struct {
-	client *client.Client
+	client Client
 }
 
-func NewService(client *client.Client) Service {
+func NewService(client Client) Service {
 	return &ServiceImpl{client: client}
 }
 
@@ -32,13 +28,7 @@ func (s *ServiceImpl) Pull(imageRefUrl, registryAuth string) error {
 		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
 	}
 
-	reader, err := s.client.ImagePull(context.TODO(), imageRefUrl, types.ImagePullOptions{RegistryAuth: registryAuth})
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	if err := parse(reader); err != nil {
+	if err := s.client.Pull(imageRefUrl, types.ImagePullOptions{RegistryAuth: registryAuth}); err != nil {
 		return fmt.Errorf("failed to pull image: %w", err)
 	}
 
@@ -52,13 +42,7 @@ func (s *ServiceImpl) Push(imageRefUrl, registryAuth string) error {
 		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
 	}
 
-	reader, err := s.client.ImagePush(context.TODO(), imageRefUrl, types.ImagePushOptions{RegistryAuth: registryAuth})
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	if err := parse(reader); err != nil {
+	if err := s.client.Push(imageRefUrl, types.ImagePushOptions{RegistryAuth: registryAuth}); err != nil {
 		return fmt.Errorf("failed to push image: %w", err)
 	}
 
@@ -66,34 +50,23 @@ func (s *ServiceImpl) Push(imageRefUrl, registryAuth string) error {
 }
 
 func (s *ServiceImpl) Build(dockerfile string, tags ...string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
-	defer cancel()
-
-	tar, err := archive.TarWithOptions(dockerfile, &archive.TarOptions{})
-	if err != nil {
-		return err
-	}
-
 	opts := types.ImageBuildOptions{
 		Dockerfile: dockerfile,
 		Tags:       tags,
 		Remove:     true,
 	}
 
-	res, err := s.client.ImageBuild(ctx, tar, opts)
-	if err != nil {
-		return err
-	}
-
-	defer res.Body.Close()
-
-	if err := parse(res.Body); err != nil {
-		return fmt.Errorf("Failed to build image: %w", err)
+	if err := s.client.Build(opts); err != nil {
+		return fmt.Errorf("failed to build image with build options %v: %w", opts, err)
 	}
 
 	return nil
 }
 
 func (s *ServiceImpl) Tag(src, dest string) error {
-	return s.client.ImageTag(context.TODO(), src, dest)
+	if err := s.client.Tag(src, dest); err != nil {
+		return fmt.Errorf("failed to tag image '%s' with tag '%s': %w", src, dest, err)
+	}
+
+	return nil
 }
