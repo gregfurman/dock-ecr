@@ -64,7 +64,7 @@ func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]stri
 		return err
 	}
 
-	repo, err := s.ecrService.CreateEcrRepository(repositoryName, false, repositoryTags)
+	repo, err := s.ecrService.CreateEcrRepository(repositoryName, true, repositoryTags)
 	if err != nil {
 		return err
 	}
