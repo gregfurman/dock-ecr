@@ -7,18 +7,22 @@ import (
 	"github.com/gregfurman/docker-ecr/pkg/api"
 	"github.com/gregfurman/docker-ecr/pkg/docker"
 	"github.com/gregfurman/docker-ecr/pkg/ecr"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
+
+var Version = "1.0.0"
 
 var (
 	API     api.Service
 	rootCmd = &cobra.Command{
 		Use:              "dock-ecr",
-		Short:            "dock-ecr - a single CLI to interact with a local docker and a cloud provider",
+		Short:            "dock-ecr - a single CLI to interact with a local docker server and a cloud provider",
 		Long:             ``,
+		Version:          Version,
 		PersistentPreRun: initAPI,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print("docker-ecr tool")
+			log.Printf("docker-ecr tool %s", Version)
 		},
 	}
 )
