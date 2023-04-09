@@ -11,17 +11,20 @@ import (
 )
 
 func TestDocker(t *testing.T) {
-
-	TestPull := func(t *testing.T) {
+	setupMock := func() *docker.MockClient {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := docker.NewMockClient(ctrl)
-		svc := NewService(client)
+		return docker.NewMockClient(ctrl)
+	}
 
-		ref := "docker-registry.com/test/repo"
-		auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-		options := types.ImagePullOptions{RegistryAuth: auth}
+	ref := "docker-registry.com/test/repo"
+	auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
+	options := types.ImagePullOptions{RegistryAuth: auth}
+
+	TestPull := func(t *testing.T) {
+		client := setupMock()
+		svc := NewService(client)
 
 		success := func(t *testing.T) {
 			client.EXPECT().Pull(ref, options).Return(nil)
@@ -44,15 +47,8 @@ func TestDocker(t *testing.T) {
 	}
 
 	TestPush := func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		client := docker.NewMockClient(ctrl)
+		client := setupMock()
 		svc := NewService(client)
-
-		ref := "docker-registry.com/test/repo"
-		auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-		options := types.ImagePushOptions{RegistryAuth: auth}
 
 		success := func(t *testing.T) {
 			client.EXPECT().Push(ref, options).Return(nil)
@@ -75,10 +71,7 @@ func TestDocker(t *testing.T) {
 	}
 
 	TestBuild := func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		client := docker.NewMockClient(ctrl)
+		client := setupMock()
 		svc := NewService(client)
 
 		dockerfile := "dockerfile"
@@ -110,10 +103,7 @@ func TestDocker(t *testing.T) {
 	}
 
 	TestTag := func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		client := docker.NewMockClient(ctrl)
+		client := setupMock()
 		svc := NewService(client)
 
 		src := "imageName"
@@ -143,5 +133,4 @@ func TestDocker(t *testing.T) {
 	t.Run("TestPull", TestPull)
 	t.Run("TestPush", TestPush)
 	t.Run("TestTag", TestTag)
-
 }

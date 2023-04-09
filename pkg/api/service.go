@@ -6,9 +6,9 @@ import (
 )
 
 type Service interface {
-	Build(imageRefUrl string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error
+	Build(imageRefURL string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error
 	Push(repositoryName string, repositoryTags map[string]string, imageTags ...string) error
-	Pull(imageRefUrl string) error
+	Pull(imageRefURL string) error
 	Login() (*string, error)
 }
 
@@ -26,8 +26,8 @@ func NewService(dockerSvc docker.Service, ecrSvc ecr.Service) Service {
 	return &service
 }
 
-func (c *ServiceImpl) Login() (*string, error) {
-	auth, err := c.ecrService.GetAuth()
+func (s *ServiceImpl) Login() (*string, error) {
+	auth, err := s.ecrService.GetAuth()
 	if err != nil {
 		return nil, err
 	}
@@ -40,10 +40,10 @@ func (c *ServiceImpl) Login() (*string, error) {
 	return fmtAuth, nil
 }
 
-func (s *ServiceImpl) Build(imageRefUrl string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
+func (s *ServiceImpl) Build(imageRefURL string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
 	imageTags = append(imageTags, repositoryName)
 
-	if err := s.dockerService.Build(imageRefUrl, imageTags...); err != nil {
+	if err := s.dockerService.Build(imageRefURL, imageTags...); err != nil {
 		return err
 	}
 
@@ -83,11 +83,11 @@ func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]stri
 	return nil
 }
 
-func (c *ServiceImpl) Pull(imageRefUrl string) error {
+func (c *ServiceImpl) Pull(imageRefURL string) error {
 	auth, err := c.Login()
 	if err != nil {
 		return err
 	}
 
-	return c.dockerService.Pull(imageRefUrl, *auth)
+	return c.dockerService.Pull(imageRefURL, *auth)
 }

@@ -34,9 +34,9 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // Build mocks base method.
-func (m *MockService) Build(imageRefUrl string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
+func (m *MockService) Build(imageRefURL string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{imageRefUrl, push, repositoryName, repositoryTags}
+	varargs := []interface{}{imageRefURL, push, repositoryName, repositoryTags}
 	for _, a := range imageTags {
 		varargs = append(varargs, a)
 	}
@@ -46,9 +46,9 @@ func (m *MockService) Build(imageRefUrl string, push bool, repositoryName string
 }
 
 // Build indicates an expected call of Build.
-func (mr *MockServiceMockRecorder) Build(imageRefUrl, push, repositoryName, repositoryTags interface{}, imageTags ...interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Build(imageRefURL, push, repositoryName, repositoryTags interface{}, imageTags ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{imageRefUrl, push, repositoryName, repositoryTags}, imageTags...)
+	varargs := append([]interface{}{imageRefURL, push, repositoryName, repositoryTags}, imageTags...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Build", reflect.TypeOf((*MockService)(nil).Build), varargs...)
 }
 
@@ -68,17 +68,17 @@ func (mr *MockServiceMockRecorder) Login() *gomock.Call {
 }
 
 // Pull mocks base method.
-func (m *MockService) Pull(imageRefUrl string) error {
+func (m *MockService) Pull(imageRefURL string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Pull", imageRefUrl)
+	ret := m.ctrl.Call(m, "Pull", imageRefURL)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Pull indicates an expected call of Pull.
-func (mr *MockServiceMockRecorder) Pull(imageRefUrl interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Pull(imageRefURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockService)(nil).Pull), imageRefUrl)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockService)(nil).Pull), imageRefURL)
 }
 
 // Push mocks base method.

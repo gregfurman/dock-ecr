@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/golang/mock/gomock"
-
 	docker "github.com/gregfurman/docker-ecr/pkg/docker/mock_docker"
 	ecr "github.com/gregfurman/docker-ecr/pkg/ecr/mock_ecr"
 )
@@ -25,7 +24,6 @@ func TestLogin(t *testing.T) {
 		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
 
 		fmtAuth, err := api.Login()
-
 		if err != nil {
 			t.Errorf("Unexpected error occurred. Expected nil, got %v", err)
 		}
@@ -88,7 +86,6 @@ func TestPush(t *testing.T) {
 		dockerSvc.EXPECT().Pull(ref, expectedAuth).Return(nil)
 
 		err := api.Pull(ref)
-
 		if err != nil {
 			t.Errorf("Unexpected error occurred. Expected nil, got %v", err)
 		}
@@ -139,7 +136,6 @@ func TestPull(t *testing.T) {
 		dockerSvc.EXPECT().Push(ref, expectedAuth).Return(nil)
 
 		err := api.Push(repoName, repoTags, imageTags...)
-
 		if err != nil {
 			t.Errorf("Unexpected error occurred. Expected nil, got %v", err)
 		}
