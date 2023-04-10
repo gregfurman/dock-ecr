@@ -15,6 +15,7 @@ func clientFromConfig(ctx context.Context, cfgLoader loadConfig, optFns ...func(
 	cfg, err := cfgLoader(ctx, optFns...)
 	if err != nil {
 		logrus.Fatalf("Failed to create ECR client from config: %s", err)
+
 		return nil
 	}
 

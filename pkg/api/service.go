@@ -51,11 +51,7 @@ func (s *ServiceImpl) Build(imageRefURL string, push bool, repositoryName string
 		return nil
 	}
 
-	if err := s.Push(repositoryName, repositoryTags); err != nil {
-		return err
-	}
-
-	return nil
+	return s.Push(repositoryName, repositoryTags)
 }
 
 func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
@@ -76,18 +72,14 @@ func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]stri
 		}
 	}
 
-	if err := s.dockerService.Push(*repo.RepositoryUri, *auth); err != nil {
-		return err
-	}
-
-	return nil
+	return s.dockerService.Push(*repo.RepositoryUri, *auth)
 }
 
-func (c *ServiceImpl) Pull(imageRefURL string) error {
-	auth, err := c.Login()
+func (s *ServiceImpl) Pull(imageRefURL string) error {
+	auth, err := s.Login()
 	if err != nil {
 		return err
 	}
 
-	return c.dockerService.Pull(imageRefURL, *auth)
+	return s.dockerService.Pull(imageRefURL, *auth)
 }

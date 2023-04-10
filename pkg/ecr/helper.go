@@ -13,6 +13,7 @@ var (
 	errNoAuthData = errors.New("failed to retrieve authorisation data for ecr-login")
 )
 
+//nolint:tagliatelle
 type authConfig struct {
 	Username string `json:"Username"`
 	Password string `json:"Password"`

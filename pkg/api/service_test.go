@@ -1,4 +1,4 @@
-package api
+package api_test
 
 import (
 	"encoding/base64"
@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/golang/mock/gomock"
+	api "github.com/gregfurman/docker-ecr/pkg/api"
 	docker "github.com/gregfurman/docker-ecr/pkg/docker/mock_docker"
 	ecr "github.com/gregfurman/docker-ecr/pkg/ecr/mock_ecr"
 )
+
+var errExpected = errors.New("error")
 
 func TestLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -17,7 +20,7 @@ func TestLogin(t *testing.T) {
 
 	dockerSvc := docker.NewMockService(ctrl)
 	ecrSvc := ecr.NewMockService(ctrl)
-	api := NewService(dockerSvc, ecrSvc)
+	api := api.NewService(dockerSvc, ecrSvc)
 
 	success := func(t *testing.T) {
 		auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
@@ -45,12 +48,12 @@ func TestLogin(t *testing.T) {
 		}
 
 		if fmtAuth != nil {
-			t.Errorf("Expected nil, recieved %s", *fmtAuth)
+			t.Errorf("Expected nil, received %s", *fmtAuth)
 		}
 	}
 
 	failedClientCall := func(t *testing.T) {
-		ecrSvc.EXPECT().GetAuth().Return(nil, errors.New("error"))
+		ecrSvc.EXPECT().GetAuth().Return(nil, errExpected)
 
 		fmtAuth, err := api.Login()
 
@@ -59,7 +62,7 @@ func TestLogin(t *testing.T) {
 		}
 
 		if fmtAuth != nil {
-			t.Errorf("Expected nil, recieved %s", *fmtAuth)
+			t.Errorf("Expected nil, received %s", *fmtAuth)
 		}
 	}
 
@@ -74,7 +77,7 @@ func TestPush(t *testing.T) {
 
 	dockerSvc := docker.NewMockService(ctrl)
 	ecrSvc := ecr.NewMockService(ctrl)
-	api := NewService(dockerSvc, ecrSvc)
+	api := api.NewService(dockerSvc, ecrSvc)
 
 	ref := "012345678910.dkr.ecr.xx-region-1.amazonaws.com/test/repo"
 
@@ -92,13 +95,12 @@ func TestPush(t *testing.T) {
 	}
 
 	failedPullWithError := func(t *testing.T) {
-		expectedError := errors.New("error")
 		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
-		dockerSvc.EXPECT().Pull(ref, expectedAuth).Return(expectedError)
+		dockerSvc.EXPECT().Pull(ref, expectedAuth).Return(errExpected)
 
 		err := api.Pull(ref)
-		if !errors.Is(err, expectedError) {
-			t.Errorf("Unexpected error occurred. Expected %v, got %v", expectedError, err)
+		if !errors.Is(err, errExpected) {
+			t.Errorf("Unexpected error occurred. Expected %v, got %v", errExpected, err)
 		}
 	}
 
@@ -112,7 +114,7 @@ func TestPull(t *testing.T) {
 
 	dockerSvc := docker.NewMockService(ctrl)
 	ecrSvc := ecr.NewMockService(ctrl)
-	api := NewService(dockerSvc, ecrSvc)
+	api := api.NewService(dockerSvc, ecrSvc)
 
 	repoName := "test/repo"
 	isImageTagsMutable := true

@@ -40,6 +40,7 @@ func GetDockerfileImages(loc string) ([]string, error) {
 	pattern := regexp.MustCompile(`^FROM\s+(?P<image>[^\s]+)`)
 
 	var images []string
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if match := pattern.FindStringSubmatch(line); match != nil {
@@ -54,7 +55,7 @@ func GetDockerfileImages(loc string) ([]string, error) {
 	return images, nil
 }
 
-func parse(rd io.Reader) error {
+func parse(reader io.Reader) error {
 	type ErrorDetail struct {
 		Message string `json:"message"`
 	}
@@ -72,9 +73,9 @@ func parse(rd io.Reader) error {
 
 	line := &Line{}
 
-	scanner := bufio.NewScanner(rd)
-	for scanner.Scan() {
+	scanner := bufio.NewScanner(reader)
 
+	for scanner.Scan() {
 		lastLine = scanner.Text()
 		if err := json.Unmarshal([]byte(lastLine), line); err != nil {
 			log.Warnf("Cannot unmarshall string [%s]: %v\n", lastLine, err)
@@ -92,17 +93,14 @@ func parse(rd io.Reader) error {
 	}
 
 	if errLine.Error != "" {
-		return errors.New(errLine.Error)
+		return errors.New(errLine.Error) //nolint:goerr113
 	}
 
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return nil
+	return scanner.Err()
 }
 
 func IsBase64(s string) bool {
 	_, err := base64.StdEncoding.DecodeString(s)
+
 	return err == nil
 }

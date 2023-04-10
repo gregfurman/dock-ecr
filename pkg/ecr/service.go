@@ -47,10 +47,13 @@ func (s *ServiceImpl) CreateEcrRepository(repositoryName string, isMutableImageT
 	}
 
 	tags := make([]types.Tag, len(repositoryTags))
-	i := 0
+	counter := 0
+
 	for key := range repositoryTags {
-		value := repositoryTags[key]
-		tags[i] = types.Tag{Key: &key, Value: &value}
+		keyCopy := key
+		value := repositoryTags[keyCopy]
+		tags[counter] = types.Tag{Key: &keyCopy, Value: &value}
+		counter++
 	}
 
 	input := ecr.CreateRepositoryInput{
@@ -205,6 +208,7 @@ func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag 
 	waiter := ecr.NewImageScanCompleteWaiter(s.client)
 	if err := waiter.Wait(context.TODO(), &scanResultsInput, time.Second*time.Duration(requestWaitTime)); err != nil {
 		log.Warnf("Scan waiting timed out: %v", err)
+
 		return []types.ImageScanFindings{}, err
 	}
 

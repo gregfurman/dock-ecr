@@ -52,11 +52,7 @@ func (c *ClientImpl) Push(image string, options types.ImagePushOptions) error {
 	}
 	defer reader.Close()
 
-	if err := parse(reader); err != nil {
-		return err
-	}
-
-	return nil
+	return parse(reader)
 }
 
 func (c *ClientImpl) Tag(source string, target string) error {
