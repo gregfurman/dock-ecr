@@ -6,12 +6,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var image string
+
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pulls a docker image using its resource URI.",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := API.Pull(args[0]); err != nil {
+		if err := API.Pull(image); err != nil {
 			log.Printf("error: %v", err)
 
 			return
@@ -23,5 +25,7 @@ var pullCmd = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
+	pullCmd.PersistentFlags().StringVarP(&image, "image-name", "i", "", "URI of image")
+
 	rootCmd.AddCommand(pullCmd)
 }

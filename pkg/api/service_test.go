@@ -71,7 +71,7 @@ func TestLogin(t *testing.T) {
 	t.Run("failed auth formatting", failedAuthFmt)
 }
 
-func TestPush(t *testing.T) {
+func TestPull(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -108,7 +108,7 @@ func TestPush(t *testing.T) {
 	t.Run("failed pull", failedPullWithError)
 }
 
-func TestPull(t *testing.T) {
+func TestPush(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -130,12 +130,11 @@ func TestPull(t *testing.T) {
 	successfulPush := func(t *testing.T) {
 		ecrSvc.EXPECT().CreateEcrRepository(repoName, isImageTagsMutable, repoTags).Return(&repo, nil)
 		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
+
 		gomock.InOrder(
-			dockerSvc.EXPECT().Tag(repoName, "hash_123").Return(nil),
-			dockerSvc.EXPECT().Tag(repoName, "test").Return(nil),
-			dockerSvc.EXPECT().Tag(repoName, *repo.RepositoryUri).Return(nil),
+			dockerSvc.EXPECT().Push(*repo.RepositoryUri+":hash_123", expectedAuth).Return(nil),
+			dockerSvc.EXPECT().Push(*repo.RepositoryUri+":test", expectedAuth).Return(nil),
 		)
-		dockerSvc.EXPECT().Push(ref, expectedAuth).Return(nil)
 
 		err := api.Push(repoName, repoTags, imageTags...)
 		if err != nil {
