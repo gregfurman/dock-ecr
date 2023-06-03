@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewClient(opts ...client.Opt) Client {
+func NewClient(opts ...client.Opt) *ClientImpl {
 	dockerClient, err := client.NewClientWithOpts(opts...)
 	if err != nil {
 		logrus.Fatalf("Failed to load new Docker client: %s", err)

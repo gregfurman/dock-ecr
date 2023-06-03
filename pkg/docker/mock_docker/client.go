@@ -48,6 +48,20 @@ func (mr *MockClientMockRecorder) Build(options interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Build", reflect.TypeOf((*MockClient)(nil).Build), options)
 }
 
+// Login mocks base method.
+func (m *MockClient) Login(auth types.AuthConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Login", auth)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Login indicates an expected call of Login.
+func (mr *MockClientMockRecorder) Login(auth interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockClient)(nil).Login), auth)
+}
+
 // Pull mocks base method.
 func (m *MockClient) Pull(refStr string, options types.ImagePullOptions) error {
 	m.ctrl.T.Helper()

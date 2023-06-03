@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -13,6 +14,7 @@ type Client interface {
 	Pull(refStr string, options types.ImagePullOptions) error
 	Push(image string, options types.ImagePushOptions) error
 	Tag(source string, target string) error
+	Login(auth types.AuthConfig) error
 }
 
 type ClientImpl struct {
@@ -22,39 +24,53 @@ type ClientImpl struct {
 func (c *ClientImpl) Build(options types.ImageBuildOptions) error {
 	tar, err := archive.TarWithOptions(options.Dockerfile, &archive.TarOptions{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create an archive of Dockerfile %s: %w", options.Dockerfile, err)
 	}
 
 	res, err := c.client.ImageBuild(context.Background(), tar, options)
 	if err != nil {
-		return err
+		return fmt.Errorf("build image request to Docker daemon failed: %w", err)
 	}
 
 	defer res.Body.Close()
 
-	return parse(res.Body)
+	return parseDockerOutput(res.Body)
 }
 
 func (c *ClientImpl) Pull(refStr string, options types.ImagePullOptions) error {
 	reader, err := c.client.ImagePull(context.Background(), refStr, options)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to pull image %s: %w", refStr, err)
 	}
 	defer reader.Close()
 
-	return parse(reader)
+	return parseDockerOutput(reader)
 }
 
 func (c *ClientImpl) Push(image string, options types.ImagePushOptions) error {
 	reader, err := c.client.ImagePush(context.TODO(), image, options)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to push image %s to remote registry: %w", image, err)
 	}
 	defer reader.Close()
 
-	return parse(reader)
+	return parseDockerOutput(reader)
 }
 
 func (c *ClientImpl) Tag(source string, target string) error {
-	return c.client.ImageTag(context.Background(), source, target)
+	err := c.client.ImageTag(context.Background(), source, target)
+	if err != nil {
+		return fmt.Errorf("failed to tag image %s as %s: %w", source, target, err)
+	}
+
+	return nil
+}
+
+func (c *ClientImpl) Login(auth types.AuthConfig) error {
+	_, err := c.client.RegistryLogin(context.TODO(), auth)
+	if err != nil {
+		return fmt.Errorf("login request to registry failed: %w", err)
+	}
+
+	return nil
 }

@@ -3,6 +3,7 @@ package ecr
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -33,7 +34,7 @@ const (
 	requestWaitTime   int32 = 120
 )
 
-func NewService(client *ecr.Client) Service {
+func NewService(client *ecr.Client) *ServiceImpl {
 	return &ServiceImpl{client: client}
 }
 
@@ -69,7 +70,7 @@ func (s *ServiceImpl) CreateEcrRepository(repositoryName string, isMutableImageT
 			return s.GetRepository(repositoryName)
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("failed to create ECR repository: %w", err)
 	}
 
 	return out.Repository, nil
@@ -89,7 +90,7 @@ func (s *ServiceImpl) GetRepositories(filter func(types.Repository) bool) ([]typ
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(context.TODO())
 		if err != nil {
-			return repositories, err
+			return repositories, fmt.Errorf("failed to get next set of repositories from paginator: %w", err)
 		}
 
 		for _, repo := range page.Repositories {
@@ -180,7 +181,7 @@ func (s *ServiceImpl) ListImages(repositoryName string, tagStatus types.TagStatu
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(context.TODO())
 		if err != nil {
-			return imageDetails, err
+			return imageDetails, fmt.Errorf("failed to get set of images from paginator: %w", err)
 		}
 
 		for _, image := range page.ImageDetails {
@@ -209,7 +210,7 @@ func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag 
 	if err := waiter.Wait(context.TODO(), &scanResultsInput, time.Second*time.Duration(requestWaitTime)); err != nil {
 		log.Warnf("Scan waiting timed out: %v", err)
 
-		return []types.ImageScanFindings{}, err
+		return []types.ImageScanFindings{}, fmt.Errorf("image scan waiter failed: %w", err)
 	}
 
 	paginator := ecr.NewDescribeImageScanFindingsPaginator(s.client, &scanResultsInput)
@@ -217,7 +218,7 @@ func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag 
 	for paginator.HasMorePages() {
 		results, err := paginator.NextPage(context.TODO())
 		if err != nil {
-			return scanFindings, err
+			return scanFindings, fmt.Errorf("failed to get next set of image scan findings from paginator: %w", err)
 		}
 
 		scanFindings = append(scanFindings, *results.ImageScanFindings)
@@ -235,7 +236,7 @@ func (s *ServiceImpl) GetAuth() (*types.AuthorizationData, error) {
 
 	out, err := s.client.GetAuthorizationToken(ctx, &input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get authentication token for ECR login: %w", err)
 	}
 
 	if len(out.AuthorizationData) < 1 {
@@ -253,6 +254,9 @@ func (s *ServiceImpl) TagImage(repositoryName, imageDigest, imageTag string) err
 	}
 
 	_, err := s.client.PutImage(context.TODO(), &input)
+	if err != nil {
+		return fmt.Errorf("failed to tag image in remote registry: %w", err)
+	}
 
 	return err
 }

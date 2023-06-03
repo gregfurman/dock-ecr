@@ -1,3 +1,4 @@
+//nolint:gonoglobals,gochecknoglobals
 package api_test
 
 import (
@@ -14,6 +15,12 @@ import (
 
 var errExpected = errors.New("error")
 
+// Expected authentication variables.
+var (
+	expectedSuccessfulAuth    = base64.StdEncoding.EncodeToString([]byte("user:pass"))
+	expectedSuccessfulFmtAuth = base64.StdEncoding.EncodeToString([]byte("{\"Username\":\"user\",\"Password\":\"pass\"}"))
+)
+
 func TestLogin(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -23,17 +30,16 @@ func TestLogin(t *testing.T) {
 	api := api.NewService(dockerSvc, ecrSvc)
 
 	success := func(t *testing.T) {
-		auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
+		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &expectedSuccessfulAuth}, nil)
+		dockerSvc.EXPECT().Login(expectedSuccessfulFmtAuth).Return(nil)
 
 		fmtAuth, err := api.Login()
 		if err != nil {
 			t.Errorf("Unexpected error occurred. Expected nil, got %v", err)
 		}
 
-		expectedAuth := base64.StdEncoding.EncodeToString([]byte("{\"Username\":\"user\",\"Password\":\"pass\"}"))
-		if expectedAuth != *fmtAuth {
-			t.Errorf("Authentication string was incorrect. Expected %s, got %s", expectedAuth, *fmtAuth)
+		if expectedSuccessfulFmtAuth != *fmtAuth {
+			t.Errorf("Authentication string was incorrect. Expected %s, got %s", expectedSuccessfulFmtAuth, *fmtAuth)
 		}
 	}
 
@@ -81,12 +87,10 @@ func TestPull(t *testing.T) {
 
 	ref := "012345678910.dkr.ecr.xx-region-1.amazonaws.com/test/repo"
 
-	auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-	expectedAuth := base64.StdEncoding.EncodeToString([]byte("{\"Username\":\"user\",\"Password\":\"pass\"}"))
-
 	successfulPull := func(t *testing.T) {
-		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
-		dockerSvc.EXPECT().Pull(ref, expectedAuth).Return(nil)
+		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &expectedSuccessfulAuth}, nil)
+		dockerSvc.EXPECT().Pull(ref, expectedSuccessfulFmtAuth).Return(nil)
+		dockerSvc.EXPECT().Login(expectedSuccessfulFmtAuth).Return(nil)
 
 		err := api.Pull(ref)
 		if err != nil {
@@ -95,8 +99,19 @@ func TestPull(t *testing.T) {
 	}
 
 	failedPullWithError := func(t *testing.T) {
-		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
-		dockerSvc.EXPECT().Pull(ref, expectedAuth).Return(errExpected)
+		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &expectedSuccessfulAuth}, nil)
+		dockerSvc.EXPECT().Pull(ref, expectedSuccessfulFmtAuth).Return(errExpected)
+		dockerSvc.EXPECT().Login(expectedSuccessfulFmtAuth).Return(nil)
+
+		err := api.Pull(ref)
+		if !errors.Is(err, errExpected) {
+			t.Errorf("Unexpected error occurred. Expected %v, got %v", errExpected, err)
+		}
+	}
+
+	failedPullLoginFailed := func(t *testing.T) {
+		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &expectedSuccessfulAuth}, nil)
+		dockerSvc.EXPECT().Login(expectedSuccessfulFmtAuth).Return(errExpected)
 
 		err := api.Pull(ref)
 		if !errors.Is(err, errExpected) {
@@ -106,6 +121,7 @@ func TestPull(t *testing.T) {
 
 	t.Run("successful pull", successfulPull)
 	t.Run("failed pull", failedPullWithError)
+	t.Run("failed pull because login error", failedPullLoginFailed)
 }
 
 func TestPush(t *testing.T) {
@@ -124,16 +140,14 @@ func TestPush(t *testing.T) {
 	imageTags := []string{"hash_123", "test"}
 	repo := types.Repository{RepositoryUri: &ref}
 
-	auth := base64.StdEncoding.EncodeToString([]byte("user:pass"))
-	expectedAuth := base64.StdEncoding.EncodeToString([]byte("{\"Username\":\"user\",\"Password\":\"pass\"}"))
-
 	successfulPush := func(t *testing.T) {
 		ecrSvc.EXPECT().CreateEcrRepository(repoName, isImageTagsMutable, repoTags).Return(&repo, nil)
-		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &auth}, nil)
+		ecrSvc.EXPECT().GetAuth().Return(&types.AuthorizationData{AuthorizationToken: &expectedSuccessfulAuth}, nil)
+		dockerSvc.EXPECT().Login(expectedSuccessfulFmtAuth).Return(nil)
 
 		gomock.InOrder(
-			dockerSvc.EXPECT().Push(*repo.RepositoryUri+":hash_123", expectedAuth).Return(nil),
-			dockerSvc.EXPECT().Push(*repo.RepositoryUri+":test", expectedAuth).Return(nil),
+			dockerSvc.EXPECT().Push(*repo.RepositoryUri+":hash_123", expectedSuccessfulFmtAuth).Return(nil),
+			dockerSvc.EXPECT().Push(*repo.RepositoryUri+":test", expectedSuccessfulFmtAuth).Return(nil),
 		)
 
 		err := api.Push(repoName, repoTags, imageTags...)

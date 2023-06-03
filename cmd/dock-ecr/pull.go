@@ -11,7 +11,6 @@ var image string
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pulls a docker image using its resource URI.",
-	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Pull(image); err != nil {
 			log.Printf("error: %v", err)
