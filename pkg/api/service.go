@@ -1,6 +1,9 @@
 package api
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gregfurman/docker-ecr/pkg/docker"
 	"github.com/gregfurman/docker-ecr/pkg/ecr"
 )
@@ -41,7 +44,14 @@ func (s *ServiceImpl) Login() (*string, error) {
 }
 
 func (s *ServiceImpl) Build(imageRefURL string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
-	imageTags = append(imageTags, repositoryName)
+	repo, err := s.ecrService.CreateEcrRepository(repositoryName, true, repositoryTags)
+	if err != nil {
+		return err
+	}
+
+	for i, tag := range imageTags {
+		imageTags[i] = fmt.Sprintf("%s:%s", *repo.RepositoryUri, tag)
+	}
 
 	if err := s.dockerService.Build(imageRefURL, imageTags...); err != nil {
 		return err
@@ -51,7 +61,7 @@ func (s *ServiceImpl) Build(imageRefURL string, push bool, repositoryName string
 		return nil
 	}
 
-	return s.Push(repositoryName, repositoryTags)
+	return s.Push(repositoryName, repositoryTags, imageTags...)
 }
 
 func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
@@ -65,14 +75,16 @@ func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]stri
 		return err
 	}
 
-	imageTags = append(imageTags, *repo.RepositoryUri)
 	for _, tag := range imageTags {
-		if err := s.dockerService.Tag(repositoryName, tag); err != nil {
+		if uri := *repo.RepositoryUri; !strings.HasPrefix(tag, uri) {
+			tag = fmt.Sprintf("%s:%s", uri, tag)
+		}
+		if err := s.dockerService.Push(tag, *auth); err != nil {
 			return err
 		}
 	}
 
-	return s.dockerService.Push(*repo.RepositoryUri, *auth)
+	return nil
 }
 
 func (s *ServiceImpl) Pull(imageRefURL string) error {
