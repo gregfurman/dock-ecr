@@ -1,3 +1,4 @@
+//nolint:gonoglobals,gochecknoglobals
 package dockecr
 
 import (
@@ -19,6 +20,7 @@ var buildCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Build(dockerfile, mustPush, repositoryName, repositoryTags, imageTags...); err != nil {
 			log.Errorf("error: %v", err)
+
 			return
 		}
 

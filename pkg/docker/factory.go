@@ -11,6 +11,7 @@ func NewClient(opts ...client.Opt) Client {
 	dockerClient, err := client.NewClientWithOpts(opts...)
 	if err != nil {
 		logrus.Fatalf("Failed to load new Docker client: %s", err)
+
 		return nil
 	}
 

@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/docker/docker/api/types"
@@ -21,11 +22,13 @@ func NewService(client Client) Service {
 	return &ServiceImpl{client: client}
 }
 
+var errNotBase64 = errors.New("registry authorisation string in form is not base64 encoded")
+
 // Pull requests the docker host to pull an image from a remote repository.
 // The full remote image path is required as well as authentication for the registry.
 func (s *ServiceImpl) Pull(imageRefURL, registryAuth string) error {
 	if !IsBase64(registryAuth) {
-		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
+		return errNotBase64
 	}
 
 	if err := s.client.Pull(imageRefURL, types.ImagePullOptions{RegistryAuth: registryAuth}); err != nil {
@@ -39,7 +42,7 @@ func (s *ServiceImpl) Pull(imageRefURL, registryAuth string) error {
 // The full remote image path is required as well as authentication for the registry.
 func (s *ServiceImpl) Push(imageRefURL, registryAuth string) error {
 	if !IsBase64(registryAuth) {
-		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
+		return errNotBase64
 	}
 
 	if err := s.client.Push(imageRefURL, types.ImagePushOptions{RegistryAuth: registryAuth}); err != nil {

@@ -1,3 +1,4 @@
+//nolint:gonoglobals,gochecknoglobals
 package dockecr
 
 import (
@@ -27,7 +28,7 @@ var (
 	}
 )
 
-func initAPI(cmd *cobra.Command, args []string) {
+func initAPI(_ *cobra.Command, _ []string) {
 	// Create clients
 	ecrClient := ecr.NewClient()
 	dockerClient := docker.NewClient()

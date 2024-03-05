@@ -1,3 +1,4 @@
+//nolint:gonoglobals,gochecknoglobals
 package dockecr
 
 import (
@@ -12,6 +13,7 @@ var pullCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Pull(args[0]); err != nil {
 			log.Printf("error: %v", err)
+
 			return
 		}
 
