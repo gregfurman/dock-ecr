@@ -16,7 +16,6 @@ var (
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Builds a docker image and, if specified, pushes it to a cloud repository.",
-	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Build(dockerfile, mustPush, repositoryName, repositoryTags, imageTags...); err != nil {
 			log.Errorf("error: %v", err)

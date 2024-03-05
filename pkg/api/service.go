@@ -20,7 +20,7 @@ type ServiceImpl struct {
 	ecrService    ecr.Service
 }
 
-func NewService(dockerSvc docker.Service, ecrSvc ecr.Service) Service {
+func NewService(dockerSvc docker.Service, ecrSvc ecr.Service) *ServiceImpl {
 	service := ServiceImpl{
 		dockerService: dockerSvc,
 		ecrService:    ecrSvc,
@@ -37,6 +37,10 @@ func (s *ServiceImpl) Login() (*string, error) {
 
 	fmtAuth, err := ecr.FormatAuthDetails(*auth.AuthorizationToken)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := s.dockerService.Login(*fmtAuth); err != nil {
 		return nil, err
 	}
 
@@ -79,6 +83,7 @@ func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]stri
 		if uri := *repo.RepositoryUri; !strings.HasPrefix(tag, uri) {
 			tag = fmt.Sprintf("%s:%s", uri, tag)
 		}
+
 		if err := s.dockerService.Push(tag, *auth); err != nil {
 			return err
 		}

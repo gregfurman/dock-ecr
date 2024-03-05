@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -21,7 +22,7 @@ func CreateAuthConfig(username, password string) (string, error) {
 
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to marshal username and password authentication config to JSON: %w", err)
 	}
 
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
@@ -32,7 +33,7 @@ func CreateAuthConfig(username, password string) (string, error) {
 func GetDockerfileImages(loc string) ([]string, error) {
 	file, err := os.Open(loc)
 	if err != nil {
-		return []string{}, err
+		return []string{}, fmt.Errorf("failed to open Dockerfile %s: %w", loc, err)
 	}
 	defer file.Close()
 
@@ -49,13 +50,13 @@ func GetDockerfileImages(loc string) ([]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return []string{}, err
+		return []string{}, fmt.Errorf("failed to parse Dockerfile: %w", err)
 	}
 
 	return images, nil
 }
 
-func parse(reader io.Reader) error {
+func parseDockerOutput(reader io.Reader) error {
 	type ErrorDetail struct {
 		Message string `json:"message"`
 	}
@@ -96,7 +97,11 @@ func parse(reader io.Reader) error {
 		return errors.New(errLine.Error) //nolint:goerr113
 	}
 
-	return scanner.Err()
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("failed to parse docker output: %w", err)
+	}
+
+	return nil
 }
 
 func IsBase64(s string) bool {

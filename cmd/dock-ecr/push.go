@@ -9,7 +9,6 @@ import (
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Pushes a docker image tagged with a repository name to a cloud repository.",
-	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Push(repositoryName, repositoryTags, imageTags...); err != nil {
 			log.Printf("error: %v", err)

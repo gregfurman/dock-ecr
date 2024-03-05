@@ -12,13 +12,14 @@ type Service interface {
 	Push(imageRefURL, registryAuth string) error
 	Build(dockerfile string, tags ...string) error
 	Tag(src, dest string) error
+	Login(auth string) error
 }
 
 type ServiceImpl struct {
 	client Client
 }
 
-func NewService(client Client) Service {
+func NewService(client Client) *ServiceImpl {
 	return &ServiceImpl{client: client}
 }
 
@@ -67,9 +68,9 @@ func (s *ServiceImpl) Build(dockerfile string, tags ...string) error {
 }
 
 func (s *ServiceImpl) Tag(src, dest string) error {
-	if err := s.client.Tag(src, dest); err != nil {
-		return fmt.Errorf("failed to tag image '%s' with tag '%s': %w", src, dest, err)
-	}
+	return s.client.Tag(src, dest)
+}
 
-	return nil
+func (s *ServiceImpl) Login(auth string) error {
+	return s.client.Login(types.AuthConfig{Auth: auth})
 }

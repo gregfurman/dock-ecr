@@ -22,7 +22,7 @@ type authConfig struct {
 func FormatAuthDetails(auth string) (*string, error) {
 	decodedAuthToken, err := base64.StdEncoding.DecodeString(auth)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decocde authentication token: %w", err)
 	}
 
 	parts := strings.Split(string(decodedAuthToken), ":")
