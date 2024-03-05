@@ -30,7 +30,7 @@ var buildCmd = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
-	buildCmd.PersistentFlags().StringArrayVarP(&imageTags, "image-tags", "i", []string{}, "docker tags to be assigned to image")
+	buildCmd.PersistentFlags().StringSliceVarP(&imageTags, "image-tags", "i", []string{}, "docker tags to be assigned to image")
 	buildCmd.PersistentFlags().StringVarP(&dockerfile, "dockerfile", "d", "Dockerfile", "Path to Dockerfile")
 	buildCmd.PersistentFlags().StringVarP(&repositoryName, "repository-name", "r", "", "Repository of image")
 	buildCmd.PersistentFlags().BoolVar(&mustPush, "push", false, "If `true`, pushes the image to the specified repository")
