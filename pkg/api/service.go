@@ -1,13 +1,13 @@
 package api
 
 import (
-	"github.com/gregfurman/docker-ecr/internal/docker"
-	"github.com/gregfurman/docker-ecr/internal/ecr"
+	"github.com/gregfurman/docker-ecr/pkg/docker"
+	"github.com/gregfurman/docker-ecr/pkg/ecr"
 )
 
 type Service interface {
 	Build(imageRefUrl string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error
-	Push(repositoryName string, repositoryTags map[string]string) error
+	Push(repositoryName string, repositoryTags map[string]string, imageTags ...string) error
 	Pull(imageRefUrl string) error
 	Login() (*string, error)
 }
@@ -58,22 +58,29 @@ func (s *ServiceImpl) Build(imageRefUrl string, push bool, repositoryName string
 	return nil
 }
 
-func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]string) error {
+func (s *ServiceImpl) Push(repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
 	auth, err := s.Login()
 	if err != nil {
 		return err
 	}
 
-	repo, err := s.ecrService.CreateEcrRepository(repositoryName, true, repositoryTags)
+	repo, err := s.ecrService.CreateEcrRepository(repositoryName, false, repositoryTags)
 	if err != nil {
 		return err
 	}
 
-	if err := s.dockerService.Tag(repositoryName, *repo.RepositoryUri); err != nil {
+	imageTags = append(imageTags, *repo.RepositoryUri)
+	for _, tag := range imageTags {
+		if err := s.dockerService.Tag(repositoryName, tag); err != nil {
+			return err
+		}
+	}
+
+	if err := s.dockerService.Push(*repo.RepositoryUri, *auth); err != nil {
 		return err
 	}
 
-	return s.dockerService.Push(*repo.RepositoryUri, *auth)
+	return nil
 }
 
 func (c *ServiceImpl) Pull(imageRefUrl string) error {

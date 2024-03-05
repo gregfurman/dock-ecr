@@ -22,6 +22,7 @@ type Service interface {
 	ListImages(repositoryName string, tagStatus types.TagStatus, filter func(types.ImageDetail) bool) ([]types.ImageDetail, error)
 	GetImageScanResults(repositoryName, imageDigest, imageTag string) ([]types.ImageScanFindings, error)
 	GetAuth() (*types.AuthorizationData, error)
+	TagImage(repositoryName, imageDigest, imageTag string) error
 }
 
 type ServiceImpl struct {
@@ -35,6 +36,9 @@ func NewService(client *ecr.Client) Service {
 
 }
 
+// CreateEcrRepository creates a new ECR repository called `repositoryName`, assigns it optional tags,
+// and sets whether the tags of images within the repository are mutable. If successful, a pointer to a repository
+// struct is returned.
 func (s *ServiceImpl) CreateEcrRepository(repositoryName string, isMutableImageTags bool, repositoryTags map[string]string) (*types.Repository, error) {
 
 	imageMutability := types.ImageTagMutabilityMutable
@@ -65,6 +69,8 @@ func (s *ServiceImpl) CreateEcrRepository(repositoryName string, isMutableImageT
 	return out.Repository, nil
 }
 
+// GetRepositories returns a subset of all repositories in the registry, filtering results based on
+// the function passed in.
 func (s *ServiceImpl) GetRepositories(filter func(types.Repository) bool) ([]types.Repository, error) {
 	maxResuls := maxResultsPerPage
 	repositoriesInput := ecr.DescribeRepositoriesInput{
@@ -89,6 +95,8 @@ func (s *ServiceImpl) GetRepositories(filter func(types.Repository) bool) ([]typ
 	return repositories, nil
 }
 
+// GetRepository matches and retrieves a single repostitory struct based on a provided repository name. If no
+// repository found, a RepositoryNotFoundException error is returned.
 func (s *ServiceImpl) GetRepository(repositoryName string) (*types.Repository, error) {
 	reduce := func(repo types.Repository) bool {
 		return *repo.RepositoryName == repositoryName
@@ -107,6 +115,7 @@ func (s *ServiceImpl) GetRepository(repositoryName string) (*types.Repository, e
 
 }
 
+// GetAllRepositories returns a list of all repository structs in the ECR registry.
 func (s *ServiceImpl) GetAllRepositories() ([]types.Repository, error) {
 	repos, err := s.GetRepositories(func(types.Repository) bool { return true })
 	if err != nil {
@@ -116,6 +125,8 @@ func (s *ServiceImpl) GetAllRepositories() ([]types.Repository, error) {
 	return repos, nil
 }
 
+// GetRepositoryNamesByPrefix returns the names of all repositories that match the provided prefix.
+// i.e a prefix of "repository" would match the repository 012345678910.dkr.ecr.region.amazonaws.com/*repository*/name
 func (s *ServiceImpl) GetRepositoryNamesByPrefix(prefix string) ([]string, error) {
 	filter := func(repo types.Repository) bool {
 		return strings.HasPrefix(*repo.RepositoryName, prefix)
@@ -134,8 +145,9 @@ func (s *ServiceImpl) GetRepositoryNamesByPrefix(prefix string) ([]string, error
 	return repositoryNames, nil
 }
 
+// GetImages returns a list of all images in a given repository.
 func (s *ServiceImpl) GetImages(repositoryName string) ([]types.ImageDetail, error) {
-	filter := func(image types.ImageDetail) bool { return true } // return all imageDetails
+	filter := func(image types.ImageDetail) bool { return true }
 
 	imageDetails, err := s.ListImages(repositoryName, types.TagStatusAny, filter)
 	for err != nil {
@@ -145,6 +157,8 @@ func (s *ServiceImpl) GetImages(repositoryName string) ([]types.ImageDetail, err
 	return imageDetails, nil
 }
 
+// ListImages returns a subset of all images in a repository, filtering by a custom passed in function as well as by TagStatus.
+// TagStatus can be TagStatusTagged, TagStatusUntagged, or TagStatusAny.
 func (s *ServiceImpl) ListImages(repositoryName string, tagStatus types.TagStatus, filter func(types.ImageDetail) bool) ([]types.ImageDetail, error) {
 
 	maxResuls := maxResultsPerPage
@@ -156,7 +170,8 @@ func (s *ServiceImpl) ListImages(repositoryName string, tagStatus types.TagStatu
 
 	var imageDetails []types.ImageDetail
 	paginator := ecr.NewDescribeImagesPaginator(s.client, &imagesInput)
-	for page, err := paginator.NextPage(context.TODO()); paginator.HasMorePages(); {
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.TODO())
 		if err != nil {
 			return imageDetails, err
 		}
@@ -171,6 +186,8 @@ func (s *ServiceImpl) ListImages(repositoryName string, tagStatus types.TagStatu
 	return imageDetails, nil
 }
 
+// GetImageScanResults returns a list of scan results for image residing in a specific repository by the image's digest and tag.
+// This function will timeout and return an error if the scan has not completed in 120 seconds.
 func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag string) ([]types.ImageScanFindings, error) {
 
 	maxResults := maxResultsPerPage
@@ -181,7 +198,7 @@ func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag 
 	}
 
 	waiter := ecr.NewImageScanCompleteWaiter(s.client)
-	err := waiter.Wait(context.TODO(), &scanResultsInput, time.Second*60)
+	err := waiter.Wait(context.TODO(), &scanResultsInput, time.Second*120)
 	if err != nil {
 		log.Warnf("Scan waiting timed out: %v", err)
 		return []types.ImageScanFindings{}, err
@@ -189,7 +206,8 @@ func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag 
 
 	var scanFindings []types.ImageScanFindings
 	paginator := ecr.NewDescribeImageScanFindingsPaginator(s.client, &scanResultsInput)
-	for results, err := paginator.NextPage(context.TODO()); paginator.HasMorePages(); {
+	for paginator.HasMorePages() {
+		results, err := paginator.NextPage(context.TODO())
 		if err != nil {
 			return scanFindings, err
 		}
@@ -200,6 +218,7 @@ func (s *ServiceImpl) GetImageScanResults(repositoryName, imageDigest, imageTag 
 	return scanFindings, nil
 }
 
+// GetAuth generates a struct with authorisation credentials required to interface with ECR.
 func (s *ServiceImpl) GetAuth() (*types.AuthorizationData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
 	defer cancel()
@@ -216,4 +235,17 @@ func (s *ServiceImpl) GetAuth() (*types.AuthorizationData, error) {
 	}
 
 	return &out.AuthorizationData[0], nil
+}
+
+func (s *ServiceImpl) TagImage(repositoryName, imageDigest, imageTag string) error {
+
+	input := ecr.PutImageInput{
+		RepositoryName: &repositoryName,
+		ImageDigest:    &imageDigest,
+		ImageTag:       &imageTag,
+	}
+
+	_, err := s.client.PutImage(context.TODO(), &input)
+
+	return err
 }
