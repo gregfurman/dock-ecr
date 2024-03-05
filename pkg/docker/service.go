@@ -7,8 +7,8 @@ import (
 )
 
 type Service interface {
-	Pull(imageRefUrl, registryAuth string) error
-	Push(imageRefUrl, registryAuth string) error
+	Pull(imageRefURL, registryAuth string) error
+	Push(imageRefURL, registryAuth string) error
 	Build(dockerfile string, tags ...string) error
 	Tag(src, dest string) error
 }
@@ -23,12 +23,12 @@ func NewService(client Client) Service {
 
 // Pull requests the docker host to pull an image from a remote repository.
 // The full remote image path is required as well as authentication for the registry.
-func (s *ServiceImpl) Pull(imageRefUrl, registryAuth string) error {
+func (s *ServiceImpl) Pull(imageRefURL, registryAuth string) error {
 	if !IsBase64(registryAuth) {
 		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
 	}
 
-	if err := s.client.Pull(imageRefUrl, types.ImagePullOptions{RegistryAuth: registryAuth}); err != nil {
+	if err := s.client.Pull(imageRefURL, types.ImagePullOptions{RegistryAuth: registryAuth}); err != nil {
 		return fmt.Errorf("failed to pull image: %w", err)
 	}
 
@@ -37,12 +37,12 @@ func (s *ServiceImpl) Pull(imageRefUrl, registryAuth string) error {
 
 // Push requests the docker host to push an image to a remote repository.
 // The full remote image path is required as well as authentication for the registry.
-func (s *ServiceImpl) Push(imageRefUrl, registryAuth string) error {
+func (s *ServiceImpl) Push(imageRefURL, registryAuth string) error {
 	if !IsBase64(registryAuth) {
 		return fmt.Errorf("error: registry authorisation string in form is not base64 encoded")
 	}
 
-	if err := s.client.Push(imageRefUrl, types.ImagePushOptions{RegistryAuth: registryAuth}); err != nil {
+	if err := s.client.Push(imageRefURL, types.ImagePushOptions{RegistryAuth: registryAuth}); err != nil {
 		return fmt.Errorf("failed to push image: %w", err)
 	}
 

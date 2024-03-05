@@ -10,6 +10,7 @@ import (
 	"regexp"
 
 	"github.com/docker/docker/api/types"
+	log "github.com/sirupsen/logrus"
 )
 
 func CreateAuthConfig(username, password string) (string, error) {
@@ -75,15 +76,21 @@ func parse(rd io.Reader) error {
 	for scanner.Scan() {
 
 		lastLine = scanner.Text()
-		json.Unmarshal([]byte(lastLine), line)
+		if err := json.Unmarshal([]byte(lastLine), line); err != nil {
+			log.Warnf("Cannot unmarshall string [%s]: %v\n", lastLine, err)
+		}
+
 		if lastStatus != line.Status {
 			lastStatus = line.Status
-			println(lastStatus)
+			log.Println(lastStatus)
 		}
 	}
 
 	errLine := &ErrorLine{}
-	json.Unmarshal([]byte(lastLine), errLine)
+	if err := json.Unmarshal([]byte(lastLine), errLine); err != nil {
+		log.Warnf("Cannot unmarshall string [%s]: %v\n", lastLine, err)
+	}
+
 	if errLine.Error != "" {
 		return errors.New(errLine.Error)
 	}

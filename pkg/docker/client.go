@@ -32,11 +32,7 @@ func (c *ClientImpl) Build(options types.ImageBuildOptions) error {
 
 	defer res.Body.Close()
 
-	if err := parse(res.Body); err != nil {
-		return err
-	}
-
-	return nil
+	return parse(res.Body)
 }
 
 func (c *ClientImpl) Pull(refStr string, options types.ImagePullOptions) error {
@@ -46,11 +42,7 @@ func (c *ClientImpl) Pull(refStr string, options types.ImagePullOptions) error {
 	}
 	defer reader.Close()
 
-	if err := parse(reader); err != nil {
-		return err
-	}
-
-	return nil
+	return parse(reader)
 }
 
 func (c *ClientImpl) Push(image string, options types.ImagePushOptions) error {

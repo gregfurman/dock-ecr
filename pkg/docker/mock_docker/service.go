@@ -53,31 +53,31 @@ func (mr *MockServiceMockRecorder) Build(dockerfile interface{}, tags ...interfa
 }
 
 // Pull mocks base method.
-func (m *MockService) Pull(imageRefUrl, registryAuth string) error {
+func (m *MockService) Pull(imageRefURL, registryAuth string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Pull", imageRefUrl, registryAuth)
+	ret := m.ctrl.Call(m, "Pull", imageRefURL, registryAuth)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Pull indicates an expected call of Pull.
-func (mr *MockServiceMockRecorder) Pull(imageRefUrl, registryAuth interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Pull(imageRefURL, registryAuth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockService)(nil).Pull), imageRefUrl, registryAuth)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockService)(nil).Pull), imageRefURL, registryAuth)
 }
 
 // Push mocks base method.
-func (m *MockService) Push(imageRefUrl, registryAuth string) error {
+func (m *MockService) Push(imageRefURL, registryAuth string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Push", imageRefUrl, registryAuth)
+	ret := m.ctrl.Call(m, "Push", imageRefURL, registryAuth)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Push indicates an expected call of Push.
-func (mr *MockServiceMockRecorder) Push(imageRefUrl, registryAuth interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Push(imageRefURL, registryAuth interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Push", reflect.TypeOf((*MockService)(nil).Push), imageRefUrl, registryAuth)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Push", reflect.TypeOf((*MockService)(nil).Push), imageRefURL, registryAuth)
 }
 
 // Tag mocks base method.
