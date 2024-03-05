@@ -1,8 +1,7 @@
 package dockecr
 
 import (
-	"fmt"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -19,16 +18,16 @@ var buildCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Build(dockerfile, mustPush, repositoryName, repositoryTags, imageTags...); err != nil {
-			fmt.Printf("error: %v", err)
+			log.Errorf("error: %v", err)
 			return
 		}
 
-		fmt.Printf("Image built successfully\n")
+		log.Println("Image built successfully")
 	},
 }
 
+//nolint:gochecknoinits
 func init() {
-
 	buildCmd.PersistentFlags().StringArrayVarP(&imageTags, "image-tags", "i", []string{}, "docker tags to be assigned to image")
 	buildCmd.PersistentFlags().StringVarP(&dockerfile, "dockerfile", "d", "Dockerfile", "Path to Dockerfile")
 	buildCmd.PersistentFlags().StringVarP(&repositoryName, "repository-name", "r", "", "Repository of image")

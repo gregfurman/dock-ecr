@@ -1,8 +1,7 @@
 package dockecr
 
 import (
-	"fmt"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -12,14 +11,15 @@ var pullCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := API.Pull(args[0]); err != nil {
-			fmt.Printf("error: %v", err)
+			log.Printf("error: %v", err)
 			return
 		}
 
-		fmt.Printf("Image pulled successfully\n")
+		log.Printf("Image pulled successfully\n")
 	},
 }
 
+//nolint:gochecknoinits
 func init() {
 	rootCmd.AddCommand(pullCmd)
 }
