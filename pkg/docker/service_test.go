@@ -7,8 +7,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/golang/mock/gomock"
-	docker "github.com/gregfurman/docker-ecr/pkg/docker"
-	mock "github.com/gregfurman/docker-ecr/pkg/docker/mock_docker"
+	docker "github.com/gregfurman/dock-ecr/pkg/docker"
+	mock "github.com/gregfurman/dock-ecr/pkg/docker/mock_docker"
 )
 
 //nolint:gochecknoglobals

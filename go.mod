@@ -1,4 +1,4 @@
-module github.com/gregfurman/docker-ecr
+module github.com/gregfurman/dock-ecr
 
 go 1.18
 

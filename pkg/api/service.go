@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gregfurman/docker-ecr/pkg/docker"
-	"github.com/gregfurman/docker-ecr/pkg/ecr"
+	"github.com/gregfurman/dock-ecr/pkg/docker"
+	"github.com/gregfurman/dock-ecr/pkg/ecr"
 )
 
 type Service interface {

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gregfurman/docker-ecr/pkg/api"
-	"github.com/gregfurman/docker-ecr/pkg/docker"
-	"github.com/gregfurman/docker-ecr/pkg/ecr"
+	"github.com/gregfurman/dock-ecr/pkg/api"
+	"github.com/gregfurman/dock-ecr/pkg/docker"
+	"github.com/gregfurman/dock-ecr/pkg/ecr"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
