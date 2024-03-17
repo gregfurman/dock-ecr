@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 )
 
 type Service interface {
@@ -72,5 +73,5 @@ func (s *ServiceImpl) Tag(src, dest string) error {
 }
 
 func (s *ServiceImpl) Login(auth string) error {
-	return s.client.Login(types.AuthConfig{Auth: auth})
+	return s.client.Login(registry.AuthConfig{Auth: auth})
 }

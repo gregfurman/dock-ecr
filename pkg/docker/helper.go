@@ -10,12 +10,12 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	log "github.com/sirupsen/logrus"
 )
 
 func CreateAuthConfig(username, password string) (string, error) {
-	authConfig := types.AuthConfig{
+	authConfig := registry.AuthConfig{
 		Username: username,
 		Password: password,
 	}

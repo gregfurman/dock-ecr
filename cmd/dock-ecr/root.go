@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/docker/docker/client"
 	"github.com/gregfurman/dock-ecr/pkg/api"
 	"github.com/gregfurman/dock-ecr/pkg/docker"
 	"github.com/gregfurman/dock-ecr/pkg/ecr"
@@ -31,7 +32,7 @@ var (
 func initAPI(_ *cobra.Command, _ []string) {
 	// Create clients
 	ecrClient := ecr.NewClient()
-	dockerClient := docker.NewClient()
+	dockerClient := docker.NewClient(client.FromEnv, client.WithAPIVersionNegotiation())
 
 	// Create new services
 	dockerSvc := docker.NewService(dockerClient)

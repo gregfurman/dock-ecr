@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 )
@@ -14,7 +15,7 @@ type Client interface {
 	Pull(refStr string, options types.ImagePullOptions) error
 	Push(image string, options types.ImagePushOptions) error
 	Tag(source string, target string) error
-	Login(auth types.AuthConfig) error
+	Login(auth registry.AuthConfig) error
 }
 
 type ClientImpl struct {
@@ -66,7 +67,7 @@ func (c *ClientImpl) Tag(source string, target string) error {
 	return nil
 }
 
-func (c *ClientImpl) Login(auth types.AuthConfig) error {
+func (c *ClientImpl) Login(auth registry.AuthConfig) error {
 	_, err := c.client.RegistryLogin(context.TODO(), auth)
 	if err != nil {
 		return fmt.Errorf("login request to registry failed: %w", err)
