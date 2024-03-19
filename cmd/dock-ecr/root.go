@@ -7,8 +7,9 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/gregfurman/dock-ecr/pkg/api"
+	"github.com/gregfurman/dock-ecr/pkg/aws"
+	"github.com/gregfurman/dock-ecr/pkg/aws/ecr"
 	"github.com/gregfurman/dock-ecr/pkg/docker"
-	"github.com/gregfurman/dock-ecr/pkg/ecr"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -31,12 +32,13 @@ var (
 
 func initAPI(_ *cobra.Command, _ []string) {
 	// Create clients
-	ecrClient := ecr.NewClient()
+	ecrClient := aws.NewClient()
+	stsClient := aws.NewStsClient()
 	dockerClient := docker.NewClient(client.FromEnv, client.WithAPIVersionNegotiation())
 
 	// Create new services
 	dockerSvc := docker.NewService(dockerClient)
-	ecrSvc := ecr.NewService(ecrClient)
+	ecrSvc := ecr.NewService(ecrClient, stsClient)
 	API = api.NewService(dockerSvc, ecrSvc)
 }
 

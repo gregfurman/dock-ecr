@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/golang/mock/gomock"
 	api "github.com/gregfurman/dock-ecr/pkg/api"
+	ecr "github.com/gregfurman/dock-ecr/pkg/aws/ecr/mock_ecr"
 	docker "github.com/gregfurman/dock-ecr/pkg/docker/mock_docker"
-	ecr "github.com/gregfurman/dock-ecr/pkg/ecr/mock_ecr"
 )
 
 var errExpected = errors.New("error")

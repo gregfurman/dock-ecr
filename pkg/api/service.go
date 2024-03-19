@@ -1,11 +1,12 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/gregfurman/dock-ecr/pkg/aws/ecr"
 	"github.com/gregfurman/dock-ecr/pkg/docker"
-	"github.com/gregfurman/dock-ecr/pkg/ecr"
 )
 
 type Service interface {
@@ -48,13 +49,13 @@ func (s *ServiceImpl) Login() (*string, error) {
 }
 
 func (s *ServiceImpl) Build(imageRefURL string, push bool, repositoryName string, repositoryTags map[string]string, imageTags ...string) error {
-	repo, err := s.ecrService.CreateEcrRepository(repositoryName, true, repositoryTags)
+	uri, err := s.ecrService.GetRepositoryURI(context.Background())
 	if err != nil {
 		return err
 	}
 
 	for i, tag := range imageTags {
-		imageTags[i] = fmt.Sprintf("%s:%s", *repo.RepositoryUri, tag)
+		imageTags[i] = fmt.Sprintf("%s/%s:%s", uri, repositoryName, tag)
 	}
 
 	if err := s.dockerService.Build(imageRefURL, imageTags...); err != nil {

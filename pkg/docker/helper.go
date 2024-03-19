@@ -90,7 +90,7 @@ func parseDockerOutput(reader io.Reader) error {
 
 	errLine := &ErrorLine{}
 	if err := json.Unmarshal([]byte(lastLine), errLine); err != nil {
-		log.Warnf("Cannot unmarshall string [%s]: %v\n", lastLine, err)
+		log.Warnf("Cannot unmarshal string [%s]: %v\n", lastLine, err)
 	}
 
 	if errLine.Error != "" {

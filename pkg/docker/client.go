@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/registry"
@@ -23,7 +24,12 @@ type ClientImpl struct {
 }
 
 func (c *ClientImpl) Build(options types.ImageBuildOptions) error {
-	tar, err := archive.TarWithOptions(options.Dockerfile, &archive.TarOptions{})
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory path: %w", err)
+	}
+
+	tar, err := archive.TarWithOptions(wd, &archive.TarOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create an archive of Dockerfile %s: %w", options.Dockerfile, err)
 	}
@@ -32,7 +38,6 @@ func (c *ClientImpl) Build(options types.ImageBuildOptions) error {
 	if err != nil {
 		return fmt.Errorf("build image request to Docker daemon failed: %w", err)
 	}
-
 	defer res.Body.Close()
 
 	return parseDockerOutput(res.Body)

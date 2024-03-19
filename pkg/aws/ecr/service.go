@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,10 +24,12 @@ type Service interface {
 	GetImageScanResults(repositoryName, imageDigest, imageTag string) ([]types.ImageScanFindings, error)
 	GetAuth() (*types.AuthorizationData, error)
 	TagImage(repositoryName, imageDigest, imageTag string) error
+	GetRepositoryURI(ctx context.Context) (string, error)
 }
 
 type ServiceImpl struct {
-	client *ecr.Client
+	client    *ecr.Client
+	stsClient *sts.Client
 }
 
 const (
@@ -34,8 +37,8 @@ const (
 	requestWaitTime   int32 = 120
 )
 
-func NewService(client *ecr.Client) *ServiceImpl {
-	return &ServiceImpl{client: client}
+func NewService(client *ecr.Client, stsClient *sts.Client) *ServiceImpl {
+	return &ServiceImpl{client: client, stsClient: stsClient}
 }
 
 // CreateEcrRepository creates a new ECR repository called `repositoryName`, assigns it optional tags,
@@ -259,4 +262,13 @@ func (s *ServiceImpl) TagImage(repositoryName, imageDigest, imageTag string) err
 	}
 
 	return err
+}
+
+func (s *ServiceImpl) GetRepositoryURI(ctx context.Context) (string, error) {
+	resp, err := s.stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get account ID from sts client: %w", err)
+	}
+
+	return fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", *resp.Account, s.client.Options().Region), nil
 }
